@@ -1,201 +1,586 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Analyser - Website Security & Performance Tool</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Web Analyser | Premium Intelligence</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-surface-variant": "#adaaaa",
+                        "surface": "#0e0e0e",
+                        "primary-fixed-dim": "#5690ff",
+                        "primary-dim": "#006ff0",
+                        "on-primary-container": "#002151",
+                        "primary-fixed": "#6f9fff",
+                        "error": "#ff716c",
+                        "inverse-primary": "#005ac6",
+                        "on-primary-fixed-variant": "#002a63",
+                        "on-primary-fixed": "#000000",
+                        "secondary-fixed-dim": "#d9b5ff",
+                        "on-secondary-fixed": "#4d008c",
+                        "surface-dim": "#0e0e0e",
+                        "outline": "#777575",
+                        "tertiary-dim": "#53e6c4",
+                        "primary-container": "#6f9fff",
+                        "surface-container-low": "#131313",
+                        "surface-container-highest": "#262626",
+                        "inverse-on-surface": "#565554",
+                        "on-error-container": "#ffa8a3",
+                        "surface-variant": "#262626",
+                        "on-secondary-container": "#e4c9ff",
+                        "tertiary-fixed": "#6efddb",
+                        "on-tertiary-container": "#005f4e",
+                        "outline-variant": "#494847",
+                        "surface-bright": "#2c2c2c",
+                        "tertiary-container": "#6efddb",
+                        "on-error": "#490006",
+                        "error-dim": "#d7383b",
+                        "secondary": "#bd82ff",
+                        "tertiary": "#c8ffed",
+                        "surface-container-lowest": "#000000",
+                        "on-secondary": "#31005d",
+                        "surface-container-high": "#201f1f",
+                        "tertiary-fixed-dim": "#5deecd",
+                        "secondary-dim": "#974ce9",
+                        "on-background": "#ffffff",
+                        "inverse-surface": "#fcf8f8",
+                        "background": "#0e0e0e",
+                        "on-primary": "#002c67",
+                        "on-secondary-fixed-variant": "#711bc2",
+                        "on-tertiary": "#006856",
+                        "surface-tint": "#87adff",
+                        "secondary-container": "#6807ba",
+                        "primary": "#87adff",
+                        "secondary-fixed": "#e3c6ff",
+                        "surface-container": "#1a1919",
+                        "on-tertiary-fixed-variant": "#006a57",
+                        "error-container": "#9f0519",
+                        "on-surface": "#ffffff",
+                        "on-tertiary-fixed": "#004a3d"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            body { font-family: 'Inter', sans-serif; }
+            ::-webkit-scrollbar { width: 6px; }
+            ::-webkit-scrollbar-track { background: #0e0e0e; }
+            ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
+            
+            /* Print styles */
+            @media print {
+                body { background: white !important; color: black !important; }
+                .glass-card { background: none !important; backdrop-filter: none !important; border: 1px solid #ccc !important; box-shadow: none !important; }
+                nav, footer, .input-section { display: none !important; }
+                .text-on-surface, .text-on-surface-variant { color: #333 !important; }
+                /* Need these to show up in print */
+                circle[stroke="currentColor"] { stroke: #e0e0e0 !important; }
+                .text-surface-container-highest { stroke: #e0e0e0 !important; }
+            }
+        }
+        @layer components {
+            .glass-card {
+                background: rgba(32, 31, 31, 0.4);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+                transition: box-shadow 0.4s ease, transform 0.4s ease;
+            }
+            .glass-card:hover {
+                box-shadow: 0 20px 50px -10px rgba(0, 111, 240, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                transform: translateY(-2px);
+            }
+            .bg-surface-container {
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+                transition: box-shadow 0.3s ease, transform 0.3s ease;
+            }
+            .bg-surface-container:hover {
+                box-shadow: 0 15px 35px rgba(0, 111, 240, 0.1);
+                transform: translateY(-2px);
+            }
+            .ghost-border {
+                border: 1px solid rgba(73, 72, 71, 0.15);
+            }
+            .material-symbols-outlined {
+                font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            }
+            
+            /* Dynamically injected CSS targetting from script.js */
+            .passed-item {
+                @apply flex items-center gap-2 text-on-surface text-sm mb-3;
+            }
+            .passed-item::before {
+                content: "check_circle";
+                font-family: 'Material Symbols Outlined';
+                @apply text-tertiary-dim text-lg;
+            }
+            .issue-item {
+                @apply bg-surface-container/50 border-l-4 p-4 mb-3 rounded-r-lg;
+            }
+            .issue-item.high {
+                @apply border-error;
+            }
+            .issue-item.medium {
+                @apply border-error-dim;
+            }
+            .issue-item.low {
+                @apply border-primary-dim;
+            }
+            .issue-severity {
+                @apply inline-block px-2 py-1 rounded text-[10px] font-bold uppercase mb-2;
+            }
+            .issue-severity.severity-high {
+                @apply bg-error/20 text-error;
+            }
+            .issue-severity.severity-medium {
+                @apply bg-error-dim/20 text-error-dim;
+            }
+            .issue-severity.severity-low {
+                @apply bg-primary-dim/20 text-primary-dim;
+            }
+            .issue-title {
+                @apply font-bold text-sm mb-1 text-on-surface;
+            }
+            .issue-description {
+                @apply text-xs text-on-surface-variant;
+            }
+            
+            .broken-link {
+                @apply bg-error/10 border-l-4 border-error p-3 text-sm rounded-r-lg mb-2;
+            }
+            .broken-link-url {
+                @apply text-on-surface-variant break-all mb-1;
+            }
+            .broken-link-status {
+                @apply flex gap-2 text-xs;
+            }
+            .status-code {
+                @apply bg-error text-white px-2 py-0.5 rounded font-mono;
+            }
+            .status-reason {
+                @apply text-error;
+            }
+            .broken-link-found {
+                @apply text-[10px] mt-2 text-outline;
+            }
+            .broken-link-found a {
+                @apply text-primary hover:underline;
+            }
+            
+            .improvement-item {
+                @apply bg-surface-container/30 border-l-4 border-primary p-4 mb-3 rounded-r-lg hover:bg-surface-container/50 transition-colors;
+            }
+            .improvement-header {
+                @apply flex items-center gap-2 mb-2;
+            }
+            .improvement-category {
+                @apply bg-primary/20 text-primary px-2 py-1 rounded text-[10px] font-bold uppercase;
+            }
+            .improvement-priority {
+                @apply px-2 py-1 rounded text-[10px] font-bold uppercase;
+            }
+            .priority-high {
+                @apply bg-error/20 text-error;
+            }
+            .priority-medium {
+                @apply bg-error-dim/20 text-error-dim;
+            }
+            .priority-low {
+                @apply bg-tertiary-dim/20 text-tertiary-dim;
+            }
+            .improvement-title {
+                @apply font-bold text-sm text-on-surface mb-1;
+            }
+            .improvement-description {
+                @apply text-xs text-on-surface-variant;
+            }
+
+            @keyframes blob {
+                0% { transform: translate(0px, 0px) scale(1); }
+                33% { transform: translate(30px, -50px) scale(1.1); }
+                66% { transform: translate(-20px, 20px) scale(0.9); }
+                100% { transform: translate(0px, 0px) scale(1); }
+            }
+            .animate-blob {
+                animation: blob 15s infinite alternate ease-in-out;
+            }
+            .animation-delay-2000 {
+                animation-delay: 2s;
+            }
+            .animation-delay-4000 {
+                animation-delay: 4s;
+            }
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🔍 Web Analyser</h1>
-            <p class="subtitle">Comprehensive Website Security, Performance & SEO Analysis</p>
-        </header>
 
-        <div class="input-section">
-            <div class="input-group">
-                <input 
-                    type="text" 
-                    id="urlInput" 
-                    placeholder="Enter website URL (e.g., example.com or https://example.com)"
-                    aria-label="Website URL"
-                >
-                <div class="crawl-control" title="Max number of pages to crawl">
-                    <label for="maxPagesInput">Max Pages</label>
-                    <input type="number" id="maxPagesInput" value="20" min="1" max="100" aria-label="Max pages to crawl">
-                </div>
-                <button id="analyzeBtn" onclick="analyzeWebsite()">
-                    <span class="btn-text">Analyze Website</span>
-                    <span class="btn-loader" style="display: none;">⏳</span>
-                </button>
-            </div>
-            <p class="input-hint">Enters any website URL. The crawler will follow internal links up to <strong>Max Pages</strong> deep and run all checks on every page found.</p>
+<body class="bg-surface text-on-surface antialiased min-h-screen relative overflow-hidden">
+
+    <!-- Ambient Glassmorphism Background Blobs -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary-dim opacity-20 blur-[130px] mix-blend-screen animate-blob">
         </div>
-
-        <div id="loadingSection" class="loading-section" style="display: none;">
-            <div class="spinner"></div>
-            <p id="loadingMessage">Crawling website and running analysis… This may take a minute for larger sites.</p>
+        <div
+            class="absolute top-[20%] right-[-5%] w-[45%] h-[45%] rounded-full bg-secondary-dim opacity-20 blur-[130px] mix-blend-screen animate-blob animation-delay-2000">
         </div>
-
-        <div id="errorSection" class="error-section" style="display: none;">
-            <div class="error-content">
-                <span class="error-icon">⚠️</span>
-                <p id="errorMessage"></p>
-            </div>
-        </div>
-
-        <div id="resultsSection" class="results-section" style="display: none;">
-            <div class="results-header">
-                <div class="results-header-top">
-                    <div>
-                        <h2>Analysis Results</h2>
-                        <p id="analyzedUrl"></p>
-                        <p id="timestamp"></p>
-                        <p id="crawlSummary" class="crawl-summary-text"></p>
-                    </div>
-                    <button id="exportPdfBtn" class="export-btn" onclick="exportToPdf()">
-                        📄 Export as PDF
-                    </button>
-                </div>
-            </div>
-
-            <!-- Overall Summary Card -->
-            <div class="result-card summary-card">
-                <div class="card-header summary-header">
-                    <h3>📊 Overall Summary</h3>
-                </div>
-                <div class="card-body">
-                    <div id="overallScores" class="scores-grid"></div>
-                </div>
-            </div>
-
-            <!-- Crawled Pages Card -->
-            <div class="result-card" id="crawledPagesCard" style="display:none">
-                <div class="card-header crawled-header">
-                    <h3>🗺️ Pages Crawled</h3>
-                    <span id="pagesCount" class="count-badge"></span>
-                </div>
-                <div class="card-body">
-                    <div class="crawled-table-wrap">
-                        <table id="crawledPagesTable" class="crawled-table">
-                            <thead>
-                                <tr>
-                                    <th>Page URL</th>
-                                    <th>SEO</th>
-                                    <th>Perf</th>
-                                    <th>Access.</th>
-                                    <th>Mobile</th>
-                                    <th>Broken Links</th>
-                                </tr>
-                            </thead>
-                            <tbody id="crawledPagesBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Security Section -->
-            <div class="result-card">
-                <div class="card-header security-header">
-                    <h3>🔒 Security Analysis</h3>
-                    <span id="securityScore" class="score-badge"></span>
-                </div>
-                <div class="card-body">
-                    <div id="securityPassed" class="passed-list"></div>
-                    <div id="securityIssues" class="issues-list"></div>
-                </div>
-            </div>
-
-            <!-- Broken Links Section -->
-            <div class="result-card">
-                <div class="card-header links-header">
-                    <h3>🔗 Broken Links</h3>
-                    <span id="brokenLinksCount" class="count-badge"></span>
-                </div>
-                <div class="card-body">
-                    <div id="linksStats" class="stats-row"></div>
-                    <div id="brokenLinksList" class="issues-list"></div>
-                </div>
-            </div>
-
-            <!-- Performance Section -->
-            <div class="result-card">
-                <div class="card-header performance-header">
-                    <h3>⚡ Performance Analysis</h3>
-                </div>
-                <div class="card-body">
-                    <div id="performanceMetrics" class="metrics-grid"></div>
-                    <div id="performanceGood" class="passed-list"></div>
-                    <div id="performanceIssues" class="issues-list"></div>
-                </div>
-            </div>
-
-            <!-- Rendering Section -->
-            <div class="result-card">
-                <div class="card-header rendering-header">
-                    <h3>🎨 Rendering Analysis</h3>
-                    <span id="renderingScore" class="score-badge"></span>
-                </div>
-                <div class="card-body">
-                    <div id="renderingGood" class="passed-list"></div>
-                    <div id="renderingIssues" class="issues-list"></div>
-                </div>
-            </div>
-
-            <!-- Improvements Section -->
-            <div class="result-card">
-                <div class="card-header improvements-header">
-                    <h3>💡 Suggested Improvements</h3>
-                    <span id="improvementsCount" class="count-badge"></span>
-                </div>
-                <div class="card-body">
-                    <div id="improvementsList" class="improvements-list"></div>
-                </div>
-            </div>
-
-            <!-- SEO Section -->
-            <div class="result-card">
-                <div class="card-header seo-header">
-                    <h3>🎯 SEO Analysis</h3>
-                    <span id="seoScore" class="score-badge"></span>
-                </div>
-                <div class="card-body">
-                    <div id="seoGood" class="passed-list"></div>
-                    <div id="seoIssues" class="issues-list"></div>
-                </div>
-            </div>
-
-            <!-- Accessibility Section -->
-            <div class="result-card">
-                <div class="card-header accessibility-header">
-                    <h3>♿ Accessibility</h3>
-                    <span id="accessibilityScore" class="score-badge"></span>
-                </div>
-                <div class="card-body">
-                    <div id="accessibilityGood" class="passed-list"></div>
-                    <div id="accessibilityIssues" class="issues-list"></div>
-                </div>
-            </div>
-
-            <!-- Mobile Optimization Section -->
-            <div class="result-card">
-                <div class="card-header mobile-header">
-                    <h3>📱 Mobile Optimization</h3>
-                    <span id="mobileScore" class="score-badge"></span>
-                </div>
-                <div class="card-body">
-                    <div id="mobileGood" class="passed-list"></div>
-                    <div id="mobileIssues" class="issues-list"></div>
-                </div>
-            </div>
+        <div
+            class="absolute bottom-[-10%] left-[20%] w-[60%] h-[60%] rounded-full bg-tertiary-dim opacity-10 blur-[150px] mix-blend-screen animate-blob animation-delay-4000">
         </div>
     </div>
 
-    <footer>
-        <p>Web Analyser © 2026 | Analyze websites for security, performance, and SEO</p>
+    <!-- Shared TopNavBar -->
+    <nav
+        class="fixed top-0 w-full z-50 bg-[#0e0e0e]/80 backdrop-blur-xl shadow-[0_40px_40px_-15px_rgba(0,111,240,0.08)]">
+        <div class="flex justify-between items-center h-16 px-8 w-full max-w-screen-2xl mx-auto">
+            <div class="text-xl font-bold tracking-tighter text-[#87adff] font-['Inter'] antialiased">Web Analyser</div>
+            <div class="hidden md:flex items-center gap-8">
+                <a class="text-[#87adff] border-b-2 border-[#87adff] pb-1 font-['Inter'] text-sm font-medium"
+                    href="#">Dashboard</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <button
+                    class="text-[#a1a1a1] hover:bg-[#262626] p-2 rounded-full transition-all duration-200 active:scale-95">
+                    <span class="material-symbols-outlined">settings</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-32 pb-24 px-6 md:px-12 max-w-screen-2xl mx-auto">
+        <!-- Header Section -->
+        <header class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-extrabold tracking-tighter text-on-surface mb-4">
+                <span class="text-primary-dim">🔍</span> Web Analyser
+            </h1>
+            <p class="text-on-surface-variant text-lg max-w-2xl mx-auto font-light leading-relaxed">
+                Comprehensive Website Security, Performance &amp; SEO Analysis. Powered by Luminous Observer
+                Intelligence.
+            </p>
+        </header>
+
+        <!-- Error/Loading Messages -->
+        <div id="loadingSection"
+            class="hidden max-w-4xl mx-auto mb-10 text-center glass-card p-10 rounded-2xl ghost-border">
+            <span class="material-symbols-outlined animate-spin text-5xl text-primary mb-4">sync</span>
+            <h3 class="text-xl font-medium text-on-surface mb-2">Analyzing Website...</h3>
+            <p class="text-on-surface-variant text-sm">Crawling up to the max pages specified. This may take a moment
+                for larger sites.</p>
+        </div>
+
+        <div id="errorSection"
+            class="hidden max-w-4xl mx-auto mb-10 glass-card bg-error/10 border border-error/20 p-6 rounded-xl flex items-center gap-4">
+            <span class="material-symbols-outlined text-error text-3xl">error</span>
+            <p id="errorMessage" class="text-error font-medium"></p>
+        </div>
+
+        <!-- Hero Input Section -->
+        <section class="max-w-4xl mx-auto mb-20">
+            <div
+                class="input-section glass-card p-2 rounded-xl ghost-border flex flex-col md:flex-row items-stretch gap-2 shadow-2xl">
+                <div class="flex-grow flex items-center px-4 py-3 bg-surface-container-low rounded-lg ghost-border">
+                    <span class="material-symbols-outlined text-on-surface-variant mr-3">language</span>
+                    <input id="urlInput"
+                        class="bg-transparent border-none focus:ring-0 text-on-surface w-full placeholder:text-outline/50"
+                        placeholder="Enter website URL (e.g., https://example.com)" type="text" />
+                </div>
+                <div class="flex items-center px-4 py-3 bg-surface-container-low rounded-lg ghost-border w-full md:w-32 group relative"
+                    title="Max Crawl Depth">
+                    <span class="material-symbols-outlined text-on-surface-variant mr-2 text-sm">account_tree</span>
+                    <input id="maxPagesInput"
+                        class="bg-transparent border-none focus:ring-0 text-on-surface w-full text-center" type="number"
+                        min="1" max="100" value="20" />
+                </div>
+
+                <button id="analyzeBtn" onclick="analyzeWebsite()"
+                    class="bg-primary hover:bg-primary-fixed-dim text-on-primary font-bold px-8 py-3 rounded-lg transition-all duration-300 active:scale-95 flex items-center justify-center gap-2">
+                    <span class="btn-text">Analyze</span>
+                    <span class="btn-loader hidden material-symbols-outlined animate-spin text-sm">sync</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- RESULTS SECTION -->
+        <div id="resultsSection" class="hidden">
+            <!-- Results Header -->
+            <section class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-on-surface flex items-center gap-3">
+                        Analysis Results
+                        <span
+                            class="px-3 py-1 bg-surface-container-highest text-xs font-mono rounded-full text-on-surface-variant ghost-border">v2.4.0</span>
+                    </h2>
+                    <div class="flex items-center gap-3 mt-1 text-on-surface-variant text-sm">
+                        <span id="analyzedUrl" class="text-primary font-medium"></span>
+                        <span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+                        <span id="timestamp"></span>
+                    </div>
+                    <div id="crawlSummary" class="mt-2 text-xs text-on-surface-variant/80 italic font-medium"></div>
+                </div>
+                <button id="exportPdfBtn" onclick="exportToPdf()"
+                    class="flex items-center gap-2 px-5 py-2.5 bg-surface-container text-on-surface-variant border border-outline-variant/20 rounded-lg hover:bg-surface-bright transition-colors text-sm font-medium hover:text-white">
+                    <span class="material-symbols-outlined text-lg">description</span>
+                    Export PDF
+                </button>
+            </section>
+
+            <!-- Data Grid: Bento Style -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+                <!-- Overall Summary Card -->
+                <div class="md:col-span-8 glass-card rounded-xl ghost-border p-8 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-8 text-on-surface">Ecosystem Health Overview</h3>
+                        <!-- JS will inject circles into #overallScores -->
+                        <div id="overallScores" class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                        </div>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-outline-variant/10 flex justify-between items-center">
+                        <div class="text-on-surface-variant text-sm" id="summaryBlurb"></div>
+                        <div class="flex gap-2">
+                            <span class="w-2 h-2 rounded-full bg-primary"></span>
+                            <span class="w-2 h-2 rounded-full bg-surface-container-highest"></span>
+                            <span class="w-2 h-2 rounded-full bg-surface-container-highest"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Metrics Side -->
+                <div class="md:col-span-4 flex flex-col gap-6">
+                    <!-- Actually populated via performance -->
+                    <div class="bg-surface-container rounded-xl ghost-border p-6 flex flex-col h-full justify-center">
+                        <h3 class="text-sm font-semibold text-on-surface mb-4">Performance Pulse</h3>
+                        <div id="performanceMetrics" class="flex flex-col gap-4">
+                            <!-- JS injects here -->
+                        </div>
+                    </div>
+                    <!-- Actually populated via broken links stats -->
+                    <div class="bg-surface-container rounded-xl ghost-border p-6 flex flex-col h-full justify-center">
+                        <h3 class="text-sm font-semibold text-on-surface mb-2">Network Connections</h3>
+                        <div id="linksStats" class="grid grid-cols-3 gap-2">
+                            <!-- JS injects here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pages Crawled Table -->
+                <div id="crawledPagesCard"
+                    class="md:col-span-12 glass-card rounded-xl ghost-border overflow-hidden hidden mb-4">
+                    <div
+                        class="p-6 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-low/50">
+                        <h3 class="font-semibold text-on-surface">Pages Crawled (<span id="pagesCount">0</span>)</h3>
+                        <span class="material-symbols-outlined text-on-surface-variant">check_circle</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-[400px]">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-surface-container-lowest text-on-surface-variant sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium uppercase tracking-wider text-[10px]">Target URL
+                                    </th>
+                                    <th class="px-6 py-4 font-medium uppercase tracking-wider text-[10px]">SEO</th>
+                                    <th class="px-6 py-4 font-medium uppercase tracking-wider text-[10px]">Perf</th>
+                                    <th class="px-6 py-4 font-medium uppercase tracking-wider text-[10px]">Access</th>
+                                    <th class="px-6 py-4 font-medium uppercase tracking-wider text-[10px]">Mobile</th>
+                                    <th class="px-6 py-4 font-medium uppercase tracking-wider text-[10px]">Links</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crawledPagesBody" class="divide-y divide-outline-variant/10">
+                                <!-- JS will inject rows here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- NEW SECTION FOR ALL THE DETAIL CARDS -->
+                <div class="md:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+
+                    <!-- Security -->
+                    <div class="glass-card rounded-xl ghost-border overflow-hidden group">
+                        <div class="h-1 bg-gradient-to-r from-primary-dim to-primary"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="material-symbols-outlined text-primary-dim text-3xl">shield</span>
+                                <div class="flex flex-col items-end">
+                                    <span id="securityScore"
+                                        class="bg-outline/20 text-on-surface font-mono px-3 py-1 flex items-center rounded-lg text-xs font-bold leading-none badge"></span>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-bold mb-4">Security Protocol</h4>
+                            <div class="space-y-3">
+                                <div id="securityPassed"></div>
+                                <div id="securityIssues"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEO -->
+                    <div class="glass-card rounded-xl ghost-border overflow-hidden group">
+                        <div class="h-1 bg-gradient-to-r from-tertiary-dim to-tertiary"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="material-symbols-outlined text-tertiary-dim text-3xl">search_check</span>
+                                <div class="flex flex-col items-end">
+                                    <span id="seoScore"
+                                        class="bg-outline/20 text-on-surface font-mono px-3 py-1 flex items-center rounded-lg text-xs font-bold leading-none badge"></span>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-bold mb-4">SEO Integrity</h4>
+                            <div class="space-y-3">
+                                <div id="seoGood"></div>
+                                <div id="seoIssues"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accessibility -->
+                    <div class="glass-card rounded-xl ghost-border overflow-hidden group">
+                        <div class="h-1 bg-gradient-to-r from-secondary-fixed-dim to-secondary"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-6">
+                                <span
+                                    class="material-symbols-outlined text-secondary-fixed-dim text-3xl">accessibility_new</span>
+                                <div class="flex flex-col items-end">
+                                    <span id="accessibilityScore"
+                                        class="bg-outline/20 text-on-surface font-mono px-3 py-1 flex items-center rounded-lg text-xs font-bold leading-none badge"></span>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-bold mb-4">Accessibility Standard</h4>
+                            <div class="space-y-3">
+                                <div id="accessibilityGood"></div>
+                                <div id="accessibilityIssues"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile -->
+                    <div class="glass-card rounded-xl ghost-border overflow-hidden group">
+                        <div class="h-1 bg-gradient-to-r from-error to-error-dim"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="material-symbols-outlined text-error-dim text-3xl">phone_iphone</span>
+                                <div class="flex flex-col items-end">
+                                    <span id="mobileScore"
+                                        class="bg-outline/20 text-on-surface font-mono px-3 py-1 flex items-center rounded-lg text-xs font-bold leading-none badge"></span>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-bold mb-4">Mobile Optimization</h4>
+                            <div class="space-y-3">
+                                <div id="mobileGood"></div>
+                                <div id="mobileIssues"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance -->
+                    <div class="glass-card rounded-xl ghost-border overflow-hidden group">
+                        <div class="h-1 bg-gradient-to-r from-primary-fixed to-primary-dim"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="material-symbols-outlined text-primary-fixed text-3xl">speed</span>
+                                <div class="flex flex-col items-end">
+                                    <span
+                                        class="bg-outline/20 text-on-surface font-mono px-3 py-1 flex items-center rounded-lg text-xs font-bold leading-none badge">Detail
+                                        checks</span>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-bold mb-4">Performance Engine</h4>
+                            <div class="space-y-3">
+                                <div id="performanceGood"></div>
+                                <div id="performanceIssues"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rendering -->
+                    <div class="glass-card rounded-xl ghost-border overflow-hidden group">
+                        <div class="h-1 bg-gradient-to-r from-tertiary-fixed to-tertiary-dim"></div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="material-symbols-outlined text-tertiary-fixed text-3xl">palette</span>
+                                <div class="flex flex-col items-end">
+                                    <span id="renderingScore"
+                                        class="bg-outline/20 text-on-surface font-mono px-3 py-1 flex items-center rounded-lg text-xs font-bold leading-none badge"></span>
+                                </div>
+                            </div>
+                            <h4 class="text-xl font-bold mb-4">Rendering Analysis</h4>
+                            <div class="space-y-3">
+                                <div id="renderingGood"></div>
+                                <div id="renderingIssues"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Full Width Cards -->
+                <div class="md:col-span-12 glass-card rounded-xl ghost-border overflow-hidden group">
+                    <div class="h-1 bg-gradient-to-r from-secondary-dim to-secondary"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="material-symbols-outlined text-secondary-dim text-3xl">link_off</span>
+                            <div class="flex flex-col items-end">
+                                <span id="brokenLinksCount"
+                                    class="bg-secondary-dim text-white flex items-center gap-1 rounded font-bold uppercase text-[10px] px-2 py-1 leading-none h-6"></span>
+                            </div>
+                        </div>
+                        <h4 class="text-xl font-bold mb-4">Broken Links Auditor</h4>
+                        <div id="brokenLinksList"></div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-12 glass-card rounded-xl ghost-border overflow-hidden group">
+                    <div class="h-1 bg-gradient-to-r from-tertiary to-tertiary-dim"></div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-6">
+                            <span class="material-symbols-outlined text-primary-dim text-3xl">lightbulb</span>
+                            <div class="flex flex-col items-end">
+                                <span id="improvementsCount"
+                                    class="bg-primary/20 text-primary flex items-center gap-1 rounded font-bold uppercase text-[10px] px-2 py-1 leading-none h-6"></span>
+                            </div>
+                        </div>
+                        <h4 class="text-xl font-bold mb-4">Recommended Improvements</h4>
+                        <div id="improvementsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Shared Footer -->
+    <footer class="w-full py-12 bg-[#0e0e0e] border-t border-[#494847]/15 mt-20 group">
+        <div class="flex flex-col md:flex-row justify-between items-center px-8 max-w-7xl mx-auto gap-4">
+            <div
+                class="font-['Inter'] text-[0.6875rem] uppercase tracking-widest text-outline-variant hover:text-white transition-all duration-300 transform hover:translate-x-2 cursor-default">
+                Web Analyser © 2026
+            </div>
+            <div
+                class="font-['Inter'] text-[0.6875rem] uppercase tracking-widest text-primary-dim hover:text-primary transition-all duration-300 transform hover:-translate-x-2 cursor-default flex items-center gap-2">
+                <span class="w-1 h-1 rounded-full bg-primary-dim animate-pulse"></span>
+                Analyze websites for security, performance, and SEO
+            </div>
+        </div>
     </footer>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>

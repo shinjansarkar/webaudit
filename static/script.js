@@ -14,12 +14,12 @@ async function analyzeWebsite() {
     }
 
     // Reset UI
-    errorSection.style.display = 'none';
-    resultsSection.style.display = 'none';
-    loadingSection.style.display = 'block';
+    errorSection.classList.add('hidden');
+    resultsSection.classList.add('hidden');
+    loadingSection.classList.remove('hidden');
     analyzeBtn.disabled = true;
-    analyzeBtn.querySelector('.btn-text').style.display = 'none';
-    analyzeBtn.querySelector('.btn-loader').style.display = 'inline';
+    analyzeBtn.querySelector('.btn-text').classList.add('hidden');
+    analyzeBtn.querySelector('.btn-loader').classList.remove('hidden');
 
     try {
         const response = await fetch('/analyze', {
@@ -41,10 +41,10 @@ async function analyzeWebsite() {
     } catch (error) {
         showError(error.message);
     } finally {
-        loadingSection.style.display = 'none';
+        loadingSection.classList.add('hidden');
         analyzeBtn.disabled = false;
-        analyzeBtn.querySelector('.btn-text').style.display = 'inline';
-        analyzeBtn.querySelector('.btn-loader').style.display = 'none';
+        analyzeBtn.querySelector('.btn-text').classList.remove('hidden');
+        analyzeBtn.querySelector('.btn-loader').classList.add('hidden');
     }
 }
 
@@ -53,7 +53,7 @@ function showError(message) {
     const errorMessage = document.getElementById('errorMessage');
 
     errorMessage.textContent = message;
-    errorSection.style.display = 'block';
+    errorSection.classList.remove('hidden');
 }
 
 function getScoreClass(score) {
@@ -67,59 +67,77 @@ function displayOverallSummary(data) {
     const overallScores = document.getElementById('overallScores');
 
     const scores = [
-        { name: 'Security', score: data.security?.score || 0, icon: '🔒' },
-        { name: 'SEO', score: data.seo?.score || 0, icon: '🎯' },
-        { name: 'Accessibility', score: data.accessibility?.score || 0, icon: '♿' },
-        { name: 'Rendering', score: data.rendering?.score || 0, icon: '🎨' },
-        { name: 'Mobile', score: data.mobile?.score || 0, icon: '📱' }
+        { name: 'Security', score: data.security?.score || 0 },
+        { name: 'SEO', score: data.seo?.score || 0 },
+        { name: 'Access', score: data.accessibility?.score || 0 },
+        { name: 'Render', score: data.rendering?.score || 0 },
+        { name: 'Mobile', score: data.mobile?.score || 0 }
     ];
 
     // Calculate overall average
     const avgScore = Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length);
-    scores.unshift({ name: 'Overall', score: avgScore, icon: '⭐' });
+    scores.unshift({ name: 'Overall', score: avgScore });
 
-    overallScores.innerHTML = scores.map(item => `
-        <div class="score-item">
-            <div class="score-circle ${getScoreClass(item.score)}">
-                <span>${item.score}</span>
+    overallScores.innerHTML = scores.map(item => {
+        const strokeDasharray = 264;
+        const strokeDashoffset = Math.max(0, 264 - (item.score / 100) * 264);
+        
+        let colorClass = 'text-primary';
+        if (item.score < 50) colorClass = 'text-error';
+        else if (item.score < 80) colorClass = 'text-tertiary-dim';
+        else if (item.score >= 90) colorClass = 'text-secondary';
+        
+        return `
+        <div class="flex flex-col items-center gap-3">
+            <div class="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
+                <svg class="w-full h-full transform -rotate-90">
+                    <circle class="text-surface-container-highest" cx="50%" cy="50%" fill="transparent" r="40%" stroke="currentColor" stroke-width="3"></circle>
+                    <circle class="${colorClass}" cx="50%" cy="50%" fill="transparent" r="40%" stroke="currentColor" stroke-dasharray="${strokeDasharray}" stroke-dashoffset="${strokeDashoffset}" stroke-width="3" style="transition: stroke-dashoffset 1.5s ease-out;"></circle>
+                </svg>
+                <span class="absolute text-xl font-bold">${item.score}</span>
             </div>
-            <div class="score-name">${item.icon} ${item.name}</div>
+            <span class="text-[10px] sm:text-xs uppercase tracking-widest text-on-surface-variant font-medium text-center">${item.name}</span>
         </div>
-    `).join('');
+        `;
+    }).join('');
+
+    // Update the blurb text
+    const blurb = document.getElementById('summaryBlurb');
+    blurb.innerHTML = `<span class="${avgScore >= 70 ? 'text-secondary' : 'text-error'} font-semibold">Overall ${avgScore >= 70 ? 'Healthy' : 'Needs Attention'}</span> &middot; Full scan complete`;
 }
 
 function displayResults(data) {
     const resultsSection = document.getElementById('resultsSection');
 
     // Update header
-    document.getElementById('analyzedUrl').innerHTML = `<strong>URL:</strong> <a href="${data.url}" target="_blank">${data.url}</a>`;
-    document.getElementById('timestamp').innerHTML = `<strong>Analyzed:</strong> ${data.timestamp}`;
+    document.getElementById('analyzedUrl').innerHTML = `<a href="${data.url}" class="hover:underline" target="_blank">${data.url}</a>`;
+    document.getElementById('timestamp').textContent = `Last run: ${data.timestamp}`;
 
     // Crawl summary text
     const pageCount = data.pages_crawled || 1;
     document.getElementById('crawlSummary').innerHTML =
-        `🗺️ <strong>${pageCount}</strong> page${pageCount !== 1 ? 's' : ''} crawled &mdash; all checks run across every page and results aggregated.`;
+        `Analyzed ${pageCount} page${pageCount !== 1 ? 's' : ''}`;
 
     // Crawled pages card
     const crawledCard = document.getElementById('crawledPagesCard');
     const pagesCount = document.getElementById('pagesCount');
     const crawledBody = document.getElementById('crawledPagesBody');
     if (data.per_page_summary && data.per_page_summary.length > 0) {
-        crawledCard.style.display = 'block';
-        pagesCount.textContent = `${data.per_page_summary.length} page${data.per_page_summary.length !== 1 ? 's' : ''}`;
+        crawledCard.classList.remove('hidden');
+        pagesCount.textContent = `${data.per_page_summary.length} Total`;
         crawledBody.innerHTML = data.per_page_summary.map(p => {
             const short = p.url.replace(/^https?:\/\/[^/]+/, '') || '/';
-            return `<tr>
-                <td><a href="${p.url}" target="_blank" title="${p.url}">${short || p.url}</a></td>
-                <td><span class="mini-score ${getScoreClass(p.seo_score)}">${p.seo_score}</span></td>
-                <td><span class="mini-score ${getScoreClass(p.perf_score)}">${p.perf_score}</span></td>
-                <td><span class="mini-score ${getScoreClass(p.acc_score)}">${p.acc_score}</span></td>
-                <td><span class="mini-score ${getScoreClass(p.mob_score)}">${p.mob_score}</span></td>
-                <td><span class="mini-score ${p.broken_count > 0 ? 'poor' : 'excellent'}">${p.broken_count}</span></td>
+            return `<tr class="hover:bg-surface-bright transition-colors group">
+                <td class="px-6 py-4 font-mono text-primary-dim"><a href="${p.url}" target="_blank" title="${p.url}">${short || p.url}</a></td>
+                <td class="px-6 py-4"><span class="mini-score ${getScoreClass(p.seo_score)} px-2 py-0.5 rounded text-xs font-bold text-white shadow-sm inline-block w-8 text-center">${p.seo_score}</span></td>
+                <td class="px-6 py-4"><span class="mini-score ${getScoreClass(p.perf_score)} px-2 py-0.5 rounded text-xs font-bold text-white shadow-sm inline-block w-8 text-center">${p.perf_score}</span></td>
+                <td class="px-6 py-4"><span class="mini-score ${getScoreClass(p.acc_score)} px-2 py-0.5 rounded text-xs font-bold text-white shadow-sm inline-block w-8 text-center">${p.acc_score}</span></td>
+                <td class="px-6 py-4"><span class="mini-score ${getScoreClass(p.mob_score)} px-2 py-0.5 rounded text-xs font-bold text-white shadow-sm inline-block w-8 text-center">${p.mob_score}</span></td>
+                <td class="px-6 py-4 ${p.broken_count > 0 ? 'text-error' : 'text-on-surface-variant'}">${p.broken_count} broken</td>
             </tr>`;
         }).join('');
     } else {
-        crawledCard.style.display = 'none';
+        crawledCard.classList.add('hidden');
     }
 
     // Display overall summary
@@ -149,7 +167,7 @@ function displayResults(data) {
     // Display Mobile Optimization
     displayMobile(data.mobile);
 
-    resultsSection.style.display = 'block';
+    resultsSection.classList.remove('hidden');
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -164,8 +182,7 @@ function displaySecurity(security) {
 
     // Display passed checks
     if (security.passed && security.passed.length > 0) {
-        securityPassed.innerHTML = '<h4 style="margin-bottom: 15px; color: #4caf50;">✓ Passed Security Checks</h4>' +
-            security.passed.map(item => `
+        securityPassed.innerHTML = security.passed.map(item => `
                 <div class="passed-item">${item}</div>
             `).join('');
     } else {
@@ -174,8 +191,7 @@ function displaySecurity(security) {
 
     // Display issues
     if (security.issues && security.issues.length > 0) {
-        securityIssues.innerHTML = '<h4 style="margin-bottom: 15px; color: #ff9800;">⚠ Security Issues Found</h4>' +
-            security.issues.map(issue => `
+        securityIssues.innerHTML = security.issues.map(issue => `
                 <div class="issue-item ${issue.severity}">
                     <span class="issue-severity severity-${issue.severity}">${issue.severity}</span>
                     <div class="issue-title">${issue.issue}</div>
@@ -183,7 +199,7 @@ function displaySecurity(security) {
                 </div>
             `).join('');
     } else {
-        securityIssues.innerHTML = '<div class="passed-item">No security issues found! 🎉</div>';
+        securityIssues.innerHTML = '<div class="passed-item">No security issues found!</div>';
     }
 }
 
@@ -200,24 +216,23 @@ function displayBrokenLinks(brokenLinks) {
 
     // Display stats
     linksStats.innerHTML = `
-        <div class="stat-box">
-            <span class="stat-value">${totalChecked}</span>
-            <span class="stat-label">Total Links Checked</span>
+        <div class="bg-surface-container-low p-3 flex flex-col items-center justify-center rounded border border-outline/10">
+            <span class="text-2xl font-bold text-primary mb-1">${totalChecked}</span>
+            <span class="text-[9px] uppercase tracking-widest text-on-surface-variant text-center">Checked</span>
         </div>
-        <div class="stat-box">
-            <span class="stat-value" style="color: #4caf50;">${workingCount}</span>
-            <span class="stat-label">Working Links</span>
+        <div class="bg-surface-container-low p-3 flex flex-col items-center justify-center rounded border border-outline/10">
+            <span class="text-2xl font-bold text-tertiary-dim mb-1">${workingCount}</span>
+            <span class="text-[9px] uppercase tracking-widest text-on-surface-variant text-center">Working</span>
         </div>
-        <div class="stat-box">
-            <span class="stat-value" style="color: #f44336;">${brokenCount}</span>
-            <span class="stat-label">Broken Links</span>
+        <div class="bg-surface-container-low p-3 flex flex-col items-center justify-center rounded border border-outline/10">
+            <span class="text-2xl font-bold ${brokenCount > 0 ? 'text-error' : 'text-on-surface-variant'} mb-1">${brokenCount}</span>
+            <span class="text-[9px] uppercase tracking-widest text-on-surface-variant text-center">Broken</span>
         </div>
     `;
 
     // Display broken links
     if (brokenLinks.broken && brokenLinks.broken.length > 0) {
-        brokenLinksList.innerHTML = '<h4 style="margin-bottom: 15px; color: #f44336;">🔴 Broken Links</h4>' +
-            brokenLinks.broken.map(link => `
+        brokenLinksList.innerHTML = brokenLinks.broken.map(link => `
                 <div class="broken-link">
                     <div class="broken-link-url">${link.url}</div>
                     <div class="broken-link-status">
@@ -228,7 +243,7 @@ function displayBrokenLinks(brokenLinks) {
                 </div>
             `).join('');
     } else {
-        brokenLinksList.innerHTML = '<div class="passed-item">No broken links found! All links are working properly. ✓</div>';
+        brokenLinksList.innerHTML = '<div class="passed-item">No broken links found! All links are working properly.</div>';
     }
 }
 
@@ -239,20 +254,19 @@ function displayPerformance(performance) {
 
     // Display metrics
     performanceMetrics.innerHTML = `
-        <div class="metric-box">
-            <span class="metric-value">${performance.load_time || 'N/A'}</span>
-            <span class="metric-label">Load Time</span>
+        <div class="flex items-center justify-between border-b border-outline/10 pb-3">
+            <span class="text-xs uppercase tracking-widest text-on-surface-variant">Avg Load Time</span>
+            <span class="text-2xl font-bold text-primary-fixed">${performance.load_time || 'N/A'}</span>
         </div>
-        <div class="metric-box">
-            <span class="metric-value">${performance.page_size || 'N/A'}</span>
-            <span class="metric-label">Page Size</span>
+        <div class="flex items-center justify-between pt-1">
+            <span class="text-xs uppercase tracking-widest text-on-surface-variant">Avg Page Size</span>
+            <span class="text-2xl font-bold text-primary-fixed">${performance.page_size || 'N/A'}</span>
         </div>
     `;
 
     // Display good performance items
     if (performance.good && performance.good.length > 0) {
-        performanceGood.innerHTML = '<h4 style="margin-bottom: 15px; color: #4caf50;">✓ Good Performance</h4>' +
-            performance.good.map(item => `
+        performanceGood.innerHTML = performance.good.map(item => `
                 <div class="passed-item">${item}</div>
             `).join('');
     } else {
@@ -261,16 +275,15 @@ function displayPerformance(performance) {
 
     // Display issues
     if (performance.issues && performance.issues.length > 0) {
-        performanceIssues.innerHTML = '<h4 style="margin-bottom: 15px; color: #ff9800;">⚠ Performance Issues</h4>' +
-            performance.issues.map(issue => `
+        performanceIssues.innerHTML = performance.issues.map(issue => `
                 <div class="issue-item">
                     <div class="issue-title">${issue.issue}</div>
                     <div class="issue-description">${issue.description}</div>
-                    ${issue.value !== 'N/A' ? `<div style="margin-top: 5px; color: #667eea; font-weight: bold;">Current: ${issue.value}</div>` : ''}
+                    ${issue.value !== 'N/A' ? `<div class="mt-1 text-xs text-primary-dim font-bold font-mono">Current: ${issue.value}</div>` : ''}
                 </div>
             `).join('');
     } else {
-        performanceIssues.innerHTML = '<div class="passed-item">No performance issues found! Site is well optimized. 🚀</div>';
+        performanceIssues.innerHTML = '<div class="passed-item">No performance issues found!</div>';
     }
 }
 
@@ -306,8 +319,7 @@ function displaySEO(seo) {
     seoScore.textContent = `Score: ${score}/100`;
 
     if (seo.good && seo.good.length > 0) {
-        seoGood.innerHTML = '<h4 style="margin-bottom: 15px; color: #4caf50;">✓ SEO Strengths</h4>' +
-            seo.good.map(item => `
+        seoGood.innerHTML = seo.good.map(item => `
                 <div class="passed-item">${item}</div>
             `).join('');
     } else {
@@ -315,15 +327,14 @@ function displaySEO(seo) {
     }
 
     if (seo.issues && seo.issues.length > 0) {
-        seoIssues.innerHTML = '<h4 style="margin-bottom: 15px; color: #ff9800;">⚠ SEO Issues</h4>' +
-            seo.issues.map(issue => `
+        seoIssues.innerHTML = seo.issues.map(issue => `
                 <div class="issue-item">
                     <div class="issue-title">${issue.issue}</div>
                     <div class="issue-description">${issue.description}</div>
                 </div>
             `).join('');
     } else {
-        seoIssues.innerHTML = '<div class="passed-item">Excellent SEO! No issues found. 🎯</div>';
+        seoIssues.innerHTML = '<div class="passed-item">Excellent SEO! No issues found.</div>';
     }
 }
 
@@ -336,8 +347,7 @@ function displayAccessibility(accessibility) {
     accessibilityScore.textContent = `Score: ${score}/100`;
 
     if (accessibility.good && accessibility.good.length > 0) {
-        accessibilityGood.innerHTML = '<h4 style="margin-bottom: 15px; color: #4caf50;">✓ Accessibility Features</h4>' +
-            accessibility.good.map(item => `
+        accessibilityGood.innerHTML = accessibility.good.map(item => `
                 <div class="passed-item">${item}</div>
             `).join('');
     } else {
@@ -345,15 +355,14 @@ function displayAccessibility(accessibility) {
     }
 
     if (accessibility.issues && accessibility.issues.length > 0) {
-        accessibilityIssues.innerHTML = '<h4 style="margin-bottom: 15px; color: #ff9800;">⚠ Accessibility Issues</h4>' +
-            accessibility.issues.map(issue => `
+        accessibilityIssues.innerHTML = accessibility.issues.map(issue => `
                 <div class="issue-item">
                     <div class="issue-title">${issue.issue}</div>
                     <div class="issue-description">${issue.description}</div>
                 </div>
             `).join('');
     } else {
-        accessibilityIssues.innerHTML = '<div class="passed-item">Fully accessible! Great job. ♿</div>';
+        accessibilityIssues.innerHTML = '<div class="passed-item">Fully accessible!</div>';
     }
 }
 
@@ -366,8 +375,7 @@ function displayMobile(mobile) {
     mobileScore.textContent = `Score: ${score}/100`;
 
     if (mobile.good && mobile.good.length > 0) {
-        mobileGood.innerHTML = '<h4 style="margin-bottom: 15px; color: #4caf50;">✓ Mobile-Friendly Features</h4>' +
-            mobile.good.map(item => `
+        mobileGood.innerHTML = mobile.good.map(item => `
                 <div class="passed-item">${item}</div>
             `).join('');
     } else {
@@ -375,15 +383,14 @@ function displayMobile(mobile) {
     }
 
     if (mobile.issues && mobile.issues.length > 0) {
-        mobileIssues.innerHTML = '<h4 style="margin-bottom: 15px; color: #ff9800;">⚠ Mobile Optimization Issues</h4>' +
-            mobile.issues.map(issue => `
+        mobileIssues.innerHTML = mobile.issues.map(issue => `
                 <div class="issue-item">
                     <div class="issue-title">${issue.issue}</div>
                     <div class="issue-description">${issue.description}</div>
                 </div>
             `).join('');
     } else {
-        mobileIssues.innerHTML = '<div class="passed-item">Perfectly optimized for mobile! 📱</div>';
+        mobileIssues.innerHTML = '<div class="passed-item">Optimized for mobile.</div>';
     }
 }
 
@@ -403,8 +410,7 @@ function displayRendering(rendering) {
     renderingScore.textContent = `Score: ${score}/100`;
 
     if (rendering.good && rendering.good.length > 0) {
-        renderingGood.innerHTML = '<h4 style="margin-bottom: 15px; color: #4caf50;">✓ Rendering Checks Passed</h4>' +
-            rendering.good.map(item => `
+        renderingGood.innerHTML = rendering.good.map(item => `
                 <div class="passed-item">${item}</div>
             `).join('');
     } else {
@@ -412,8 +418,7 @@ function displayRendering(rendering) {
     }
 
     if (rendering.issues && rendering.issues.length > 0) {
-        renderingIssues.innerHTML = '<h4 style="margin-bottom: 15px; color: #ff9800;">⚠ Rendering Issues</h4>' +
-            rendering.issues.map(issue => `
+        renderingIssues.innerHTML = rendering.issues.map(issue => `
                 <div class="issue-item ${issue.severity || ''}">
                     ${issue.severity ? `<span class="issue-severity severity-${issue.severity}">${issue.severity}</span>` : ''}
                     <div class="issue-title">${issue.issue}</div>
@@ -421,7 +426,7 @@ function displayRendering(rendering) {
                 </div>
             `).join('');
     } else {
-        renderingIssues.innerHTML = '<div class="passed-item">No rendering issues found! Page renders correctly. 🎨</div>';
+        renderingIssues.innerHTML = '<div class="passed-item">No rendering issues found!</div>';
     }
 }
 
